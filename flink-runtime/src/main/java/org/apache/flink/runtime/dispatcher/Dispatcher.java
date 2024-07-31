@@ -397,10 +397,7 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
 
     private void initJobClientExpiredTime(JobGraph jobGraph) {
         JobID jobID = jobGraph.getJobID();
-        //todo 这里需要看下initialClientHeartbeatTimeout是否大于0怀疑这里没执行啊
         long initialClientHeartbeatTimeout = jobGraph.getInitialClientHeartbeatTimeout();
-        log.info("============> jobID: {}, initJobClientExpiredTime : {}",jobID,initialClientHeartbeatTimeout);
-
         if (initialClientHeartbeatTimeout > 0) {
             log.info(
                     "Begin to detect the client's aliveness for job {}. The heartbeat timeout is {}",
@@ -1094,12 +1091,11 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
     @Override
     public CompletableFuture<Void> reportJobClientHeartbeat(
             JobID jobId, long expiredTimestamp, Time timeout) {
-        log.info("===============> 1. reportJobClientHeartbeat start");
         if (!getJobManagerRunner(jobId).isPresent()) {
             log.warn("Fail to find job {} for client.", jobId);
         } else {
-            log.info(
-                    "===========> reportJobClientHeartbeat 2:  Job {} receives client's heartbeat which expiredTimestamp is {}.",
+            log.debug(
+                    "Job {} receives client's heartbeat which expiredTimestamp is {}.",
                     jobId,
                     expiredTimestamp);
             jobClientExpiredTimestamp.put(jobId, expiredTimestamp);
@@ -1108,7 +1104,6 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
     }
 
     private void checkJobClientAliveness() {
-        log.info("========> checkJobClientAliveness 1. start");
         setClientHeartbeatTimeoutForInitializedJob();
 
         long currentTimestamp = System.currentTimeMillis();
@@ -1133,20 +1128,17 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
     }
 
     private void setClientHeartbeatTimeoutForInitializedJob() {
-        log.info("============> setClientHeartbeatTimeoutForInitializedJob 1. start");
         Iterator<Map.Entry<JobID, Long>> iterator =
                 uninitializedJobClientHeartbeatTimeout.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<JobID, Long> entry = iterator.next();
             JobID jobID = entry.getKey();
-            log.info("========> setClientHeartbeatTimeoutForInitializedJob 2. key: {}, value: {}",entry.getKey(),entry.getValue() );
             Optional<JobManagerRunner> jobManagerRunnerOptional = getJobManagerRunner(jobID);
             if (!jobManagerRunnerOptional.isPresent()) {
                 iterator.remove();
             } else if (jobManagerRunnerOptional.get().isInitialized()) {
                 jobClientExpiredTimestamp.put(jobID, System.currentTimeMillis() + entry.getValue());
-                log.info("==========> setClientHeartbeatTimeoutForInitializedJob 3. jobClientExpiredTimestamp: {}",jobClientExpiredTimestamp);
-                iterator.remove();
+                //iterator.remove();
             }
         }
     }
