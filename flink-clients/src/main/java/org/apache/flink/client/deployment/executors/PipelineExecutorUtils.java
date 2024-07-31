@@ -67,8 +67,6 @@ public class PipelineExecutorUtils {
         configuration
                 .getOptional(PipelineOptionsInternal.PIPELINE_FIXED_JOB_ID)
                 .ifPresent(strJobID -> jobGraph.setJobID(JobID.fromHexString(strJobID)));
-        System.out.println("==========================================================: ATTACHED" + configuration.getBoolean(DeploymentOptions.ATTACHED));
-        System.out.println("==========================================================: SHUTDOWN_IF_ATTACHED" + configuration.getBoolean(DeploymentOptions.SHUTDOWN_IF_ATTACHED));
         if (configuration.getBoolean(DeploymentOptions.ATTACHED)
                 && configuration.getBoolean(DeploymentOptions.SHUTDOWN_IF_ATTACHED)) {
             jobGraph.setInitialClientHeartbeatTimeout(
