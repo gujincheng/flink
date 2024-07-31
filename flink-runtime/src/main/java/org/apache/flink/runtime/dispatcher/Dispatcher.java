@@ -397,7 +397,10 @@ public abstract class Dispatcher extends FencedRpcEndpoint<DispatcherId>
 
     private void initJobClientExpiredTime(JobGraph jobGraph) {
         JobID jobID = jobGraph.getJobID();
+        //todo 这里需要看下initialClientHeartbeatTimeout是否大于0怀疑这里没执行啊
         long initialClientHeartbeatTimeout = jobGraph.getInitialClientHeartbeatTimeout();
+        log.info("============> jobID: {}, initJobClientExpiredTime : {}",jobID,initialClientHeartbeatTimeout);
+
         if (initialClientHeartbeatTimeout > 0) {
             log.info(
                     "Begin to detect the client's aliveness for job {}. The heartbeat timeout is {}",
