@@ -18,6 +18,8 @@
 
 package org.apache.flink.runtime.rest.handler;
 
+import org.apache.commons.io.IOUtils;
+
 import org.apache.flink.api.common.time.Time;
 import org.apache.flink.runtime.entrypoint.ClusterEntryPointExceptionUtils;
 import org.apache.flink.runtime.rest.FileUploadHandler;
@@ -56,6 +58,7 @@ import javax.annotation.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -159,7 +162,9 @@ public abstract class AbstractHandler<
             } else {
                 try {
                     InputStream in = new ByteBufInputStream(msgContent);
+                    log.info("============> respondAsLeader InputStream : {}",IOUtils.toString(in, StandardCharsets.UTF_8));
                     request = MAPPER.readValue(in, untypedResponseMessageHeaders.getRequestClass());
+                    log.info("=======> request: {}",request);
                 } catch (JsonParseException | JsonMappingException je) {
                     throw new RestHandlerException(
                             String.format(
