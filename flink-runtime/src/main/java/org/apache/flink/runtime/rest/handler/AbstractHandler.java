@@ -166,7 +166,7 @@ public abstract class AbstractHandler<
                 log.info("=============> 444444444 ");
                 try {
                     InputStream in = new ByteBufInputStream(msgContent);
-                    log.info("============> respondAsLeader InputStream : {}",IOUtils.toString(in, StandardCharsets.UTF_8));
+                    //log.info("============> respondAsLeader InputStream : {}",IOUtils.toString(in, StandardCharsets.UTF_8));
                     request = MAPPER.readValue(in, untypedResponseMessageHeaders.getRequestClass());
                 } catch (JsonParseException | JsonMappingException je) {
                     throw new RestHandlerException(
