@@ -58,6 +58,7 @@ import javax.annotation.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
@@ -108,6 +109,12 @@ public abstract class AbstractHandler<
         this.untypedResponseMessageHeaders =
                 Preconditions.checkNotNull(untypedResponseMessageHeaders);
         this.inFlightRequestTracker = new InFlightRequestTracker();
+    }
+
+    public String byteBufToString(ByteBuf byteBuf) throws UnsupportedEncodingException {
+        byte[] bytes = new byte[byteBuf.readableBytes()];
+        byteBuf.readBytes(bytes);
+        return new String(bytes, "UTF-8");  // 指定字节数组的编码方式
     }
 
     @Override
@@ -166,7 +173,10 @@ public abstract class AbstractHandler<
                 log.info("=============> 444444444 ");
                 try {
                     InputStream in = new ByteBufInputStream(msgContent);
-                    //log.info("============> respondAsLeader InputStream : {}",IOUtils.toString(in, StandardCharsets.UTF_8));
+                    if(!untypedResponseMessageHeaders.getRequestClass().getSimpleName().equals("EmptyResponseBody")){
+                        log.info("============> respondAsLeader InputStream 1: {}",byteBufToString(msgContent));
+                        log.info("============> respondAsLeader InputStream 2: {}",IOUtils.toString(in, StandardCharsets.UTF_8));
+                    }
                     request = MAPPER.readValue(in, untypedResponseMessageHeaders.getRequestClass());
                 } catch (JsonParseException | JsonMappingException je) {
                     throw new RestHandlerException(
