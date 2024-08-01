@@ -34,7 +34,7 @@ public class JobClientHeartbeatRequestBody implements RequestBody {
         this.expiredTimestamp = expiredTimestamp;
     }
 
-    @JsonIgnore
+    //@JsonIgnore
     public long getExpiredTimestamp() {
         return expiredTimestamp;
     }
