@@ -171,12 +171,12 @@ public abstract class AbstractHandler<
                 }
             } else {
                 log.info("=============> 444444444 ");
+                InputStream in = new ByteBufInputStream(msgContent);
+                if(!untypedResponseMessageHeaders.getRequestClass().getSimpleName().equals("EmptyResponseBody")){
+                    log.info("============> respondAsLeader InputStream 1: {}",byteBufToString(msgContent));
+                    log.info("============> respondAsLeader InputStream 2: {}",IOUtils.toString(in, StandardCharsets.UTF_8));
+                }
                 try {
-                    InputStream in = new ByteBufInputStream(msgContent);
-                    if(!untypedResponseMessageHeaders.getRequestClass().getSimpleName().equals("EmptyResponseBody")){
-                        log.info("============> respondAsLeader InputStream 1: {}",byteBufToString(msgContent));
-                        log.info("============> respondAsLeader InputStream 2: {}",IOUtils.toString(in, StandardCharsets.UTF_8));
-                    }
                     request = MAPPER.readValue(in, untypedResponseMessageHeaders.getRequestClass());
                 } catch (JsonParseException | JsonMappingException je) {
                     throw new RestHandlerException(
