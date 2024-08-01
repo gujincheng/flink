@@ -173,12 +173,15 @@ public abstract class AbstractHandler<
                 log.info("=============> 444444444 ");
                 try {
                     InputStream in = new ByteBufInputStream(msgContent);
-                    request = MAPPER.readValue(in, untypedResponseMessageHeaders.getRequestClass());
-                } catch (JsonParseException | JsonMappingException je) {
                     if(!untypedResponseMessageHeaders.getRequestClass().getSimpleName().equals("EmptyRequestBody")){
                         log.info("============> respondAsLeader InputStream 1: {}",byteBufToString(msgContent));
                     }
-                    je.printStackTrace();
+                    request = MAPPER.readValue(in, untypedResponseMessageHeaders.getRequestClass());
+                } catch (JsonParseException | JsonMappingException je) {
+                    if(!untypedResponseMessageHeaders.getRequestClass().getSimpleName().equals("EmptyRequestBody")){
+                        log.info("============> respondAsLeader InputStream 2: {}",byteBufToString(msgContent));
+                    }
+                    log.info("==========> errLog: {}",je.getMessage());
                     throw new RestHandlerException(
                             String.format(
                                     "Request did not match expected format %s.",
