@@ -174,7 +174,6 @@ public abstract class AbstractHandler<
                 try {
                     //
                     if(!untypedResponseMessageHeaders.getRequestClass().getSimpleName().equals("EmptyRequestBody")){
-                        log.info("============> respondAsLeader InputStream 1: {}",byteBufToString(msgContent));
                         request = MAPPER.readValue(byteBufToString(msgContent), untypedResponseMessageHeaders.getRequestClass());
                     } else {
                         InputStream in = new ByteBufInputStream(msgContent);
