@@ -30,11 +30,11 @@ public class JobClientHeartbeatRequestBody implements RequestBody {
     private final long expiredTimestamp;
 
     @JsonCreator
-    public JobClientHeartbeatRequestBody(long expiredTimestamp) {
+    public JobClientHeartbeatRequestBody(@JsonProperty(EXPIRED_TIMESTAMP) long expiredTimestamp) {
         this.expiredTimestamp = expiredTimestamp;
     }
 
-    //@JsonIgnore
+    @JsonIgnore
     public long getExpiredTimestamp() {
         return expiredTimestamp;
     }

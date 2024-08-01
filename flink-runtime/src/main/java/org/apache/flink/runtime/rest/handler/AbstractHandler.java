@@ -121,14 +121,12 @@ public abstract class AbstractHandler<
     protected void respondAsLeader(
             ChannelHandlerContext ctx, RoutedRequest routedRequest, T gateway) {
         HttpRequest httpRequest = routedRequest.getRequest();
-        log.info("=============> 1. Received request " + httpRequest.uri() + '.');
         if (log.isTraceEnabled()) {
             log.trace("Received request " + httpRequest.uri() + '.');
         }
 
         FileUploads uploadedFiles = null;
         try {
-            log.info("=============> 222222222 ");
             if (!inFlightRequestTracker.registerRequest()) {
                 log.debug(
                         "The handler instance for {} had already been closed.",
@@ -159,7 +157,6 @@ public abstract class AbstractHandler<
 
             R request;
             if (msgContent.capacity() == 0) {
-                log.info("=============> 333333333 ");
                 try {
                     request =
                             MAPPER.readValue("{}", untypedResponseMessageHeaders.getRequestClass());
@@ -170,18 +167,10 @@ public abstract class AbstractHandler<
                             je);
                 }
             } else {
-                log.info("=============> 444444444 ");
                 try {
-                    //
-                    if(!untypedResponseMessageHeaders.getRequestClass().getSimpleName().equals("EmptyRequestBody")){
-                        request = MAPPER.readValue(byteBufToString(msgContent), untypedResponseMessageHeaders.getRequestClass());
-                    } else {
-                        InputStream in = new ByteBufInputStream(msgContent);
-                        request = MAPPER.readValue(in, untypedResponseMessageHeaders.getRequestClass());
-                    }
-
+                    InputStream in = new ByteBufInputStream(msgContent);
+                    request = MAPPER.readValue(in, untypedResponseMessageHeaders.getRequestClass());
                 } catch (JsonParseException | JsonMappingException je) {
-                    log.info("==========> errLog: {}",je.getMessage());
                     throw new RestHandlerException(
                             String.format(
                                     "Request did not match expected format %s.",
