@@ -111,12 +111,6 @@ public abstract class AbstractHandler<
         this.inFlightRequestTracker = new InFlightRequestTracker();
     }
 
-    public String byteBufToString(ByteBuf byteBuf) throws UnsupportedEncodingException {
-        byte[] bytes = new byte[byteBuf.readableBytes()];
-        byteBuf.readBytes(bytes);
-        return new String(bytes, "UTF-8");  // 指定字节数组的编码方式
-    }
-
     @Override
     protected void respondAsLeader(
             ChannelHandlerContext ctx, RoutedRequest routedRequest, T gateway) {
