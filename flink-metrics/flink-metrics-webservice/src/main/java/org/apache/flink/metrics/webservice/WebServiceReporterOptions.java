@@ -47,8 +47,7 @@ public class WebServiceReporterOptions {
             ConfigOptions.key("password")
                     .stringType()
                     .noDefaultValue()
-                    .withDescription(
-                            "(optional) WebService username's password used for authentication");
+                    .withDescription("(optional) WebService username's password used for authentication");
     
     public static final ConfigOption<String> JOBNAME =
             ConfigOptions.key("jobName")

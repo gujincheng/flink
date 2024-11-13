@@ -90,7 +90,6 @@ public class WebServiceReporter extends AbstractReporter implements Scheduled {
                 }).build();
     }
 
-
     @Override
     public void close() {
         client.dispatcher().executorService().shutdown();
