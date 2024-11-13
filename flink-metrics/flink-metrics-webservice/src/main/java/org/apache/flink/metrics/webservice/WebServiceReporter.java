@@ -24,24 +24,17 @@ import okhttp3.Authenticator;
 import okhttp3.Credentials;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
-
 import okhttp3.Request;
 import okhttp3.RequestBody;
-
 import okhttp3.Response;
-
 import okhttp3.Route;
-
 import org.apache.commons.lang3.StringUtils;
-
 import org.apache.flink.metrics.Metric;
 import org.apache.flink.metrics.MetricConfig;
 import org.apache.flink.metrics.reporter.AbstractReporter;
 import org.apache.flink.metrics.reporter.MetricReporter;
 import org.apache.flink.metrics.reporter.Scheduled;
-
 import javax.annotation.Nullable;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -54,8 +47,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** {@link MetricReporter} that exports {@link Metric Metrics} via InfluxDB. */
 public class WebServiceReporter extends AbstractReporter implements Scheduled {
-    public static final MediaType MEDIATYPE
-            = MediaType.get("application/json; charset=utf-8");
+    public static final MediaType MEDIATYPE = MediaType.get("application/json; charset=utf-8");
     private OkHttpClient client;
     private String url;
     private String jobName;
