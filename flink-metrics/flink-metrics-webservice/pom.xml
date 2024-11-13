@@ -95,7 +95,7 @@ under the License.
 								<includes>
 									<include>com.squareup.okhttp3:*</include>
 									<include>com.squareup.okio:*</include>
-									<include>com.alibaba.fastjson:*</include>
+									<include>org.apache.flink.flink-shaded-jackson:*</include>
 								</includes>
 							</artifactSet>
 							<relocations>
