@@ -28,7 +28,7 @@ import org.apache.flink.metrics.MetricConfig;
 
 
 /** Config options for {@link WebServiceReporter}. */
-@Documentation.SuffixOption(ConfigConstants.METRICS_REPORTER_PREFIX + "WebService")
+@Documentation.SuffixOption(ConfigConstants.METRICS_REPORTER_PREFIX + "webservice")
 public class WebServiceReporterOptions {
 
     public static final ConfigOption<String> URL =

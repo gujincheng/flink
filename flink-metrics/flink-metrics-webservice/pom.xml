@@ -94,11 +94,8 @@ under the License.
 						<configuration>
 							<artifactSet>
 								<includes>
-									<include>org.influxdb:*</include>
-									<include>com.squareup.moshi:*</include>
+									<include>com.alibaba.fastjson:*</include>
 									<include>com.squareup.okhttp3:*</include>
-									<include>com.squareup.okio:*</include>
-									<include>com.squareup.retrofit2:*</include>
 									<!-- org.msgpack:msgpack-core is not required -->
 								</includes>
 							</artifactSet>
