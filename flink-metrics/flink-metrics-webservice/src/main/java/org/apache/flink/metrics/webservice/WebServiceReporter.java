@@ -38,6 +38,9 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMap
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.ObjectNode;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -49,6 +52,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** {@link MetricReporter} that exports {@link Metric Metrics} via InfluxDB. */
 public class WebServiceReporter extends AbstractReporter implements Scheduled {
+    private static final Logger LOG = LoggerFactory.getLogger(WebServiceReporter.class);
     public static final MediaType MEDIATYPE = MediaType.get("application/json; charset=utf-8");
     private OkHttpClient client;
     private String url;
@@ -96,9 +100,9 @@ public class WebServiceReporter extends AbstractReporter implements Scheduled {
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
                 String responseString = response.body().string();
-                System.out.println(responseString);
+                LOG.info("=======> {}" , responseString);
             } else {
-                System.out.println("Request failed: " + response.code());
+                LOG.error("#####> report failed: {}", response.message());
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
