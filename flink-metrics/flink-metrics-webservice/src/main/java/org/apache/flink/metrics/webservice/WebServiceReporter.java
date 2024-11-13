@@ -18,8 +18,6 @@
 
 package org.apache.flink.metrics.webservice;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
 import okhttp3.MediaType;
@@ -34,13 +32,17 @@ import org.apache.flink.metrics.MetricConfig;
 import org.apache.flink.metrics.reporter.AbstractReporter;
 import org.apache.flink.metrics.reporter.MetricReporter;
 import org.apache.flink.metrics.reporter.Scheduled;
+
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.ArrayNode;
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.ObjectNode;
+
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ConcurrentModificationException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 import static org.apache.flink.util.Preconditions.checkNotNull;
@@ -107,27 +109,29 @@ public class WebServiceReporter extends AbstractReporter implements Scheduled {
     private Request buildReport() {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String reportJson = "{}";
-        Map<String, Object> metricMap = new HashMap<>();
+
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode metricMap = mapper.createObjectNode();
         metricMap.put("jobName", this.jobName);
         metricMap.put("timestamp", timestamp);
-        JSONArray jsonArray = new JSONArray();
+        ArrayNode jsonArray = mapper.createArrayNode();
         try {
             gauges.forEach((gauge, metricName) -> {
-                JSONObject jsonObject = new JSONObject();
+                ObjectNode jsonObject = mapper.createObjectNode();
                 jsonObject.put("metricName", metricName);
-                jsonObject.put("metricValue", gauge.getValue());
+                jsonObject.put("metricValue", mapper.valueToTree(gauge.getValue()));
                 jsonObject.put("metricType", "Gauge");
                 jsonArray.add(jsonObject);
             });
             counters.forEach((counter, metricName) -> {
-                JSONObject jsonObject = new JSONObject();
+                ObjectNode jsonObject = mapper.createObjectNode();
                 jsonObject.put("metricName", metricName);
                 jsonObject.put("metricValue", counter.getCount());
                 jsonObject.put("metricType", "Counter");
                 jsonArray.add(jsonObject);
             });
             histograms.forEach((histogram, metricName) -> {
-                JSONObject jsonObject = new JSONObject();
+                ObjectNode jsonObject = mapper.createObjectNode();
                 jsonObject.put("metricName", metricName);
                 jsonObject.put("metricValue", histogram.getCount());
                 jsonObject.put("metricType", "Histogram");
@@ -135,7 +139,7 @@ public class WebServiceReporter extends AbstractReporter implements Scheduled {
             });
 
             meters.forEach((meter, metricName) -> {
-                JSONObject jsonObject = new JSONObject();
+                ObjectNode jsonObject = mapper.createObjectNode();
                 jsonObject.put("metricName", metricName);
                 jsonObject.put("metricValue", meter.getCount());
                 jsonObject.put("metricType", "Meter");
@@ -143,8 +147,8 @@ public class WebServiceReporter extends AbstractReporter implements Scheduled {
             });
 
             metricMap.put("metrics", jsonArray);
-            reportJson = JSONObject.toJSONString(metricMap);
-        } catch (ConcurrentModificationException | NoSuchElementException e) {
+            reportJson = mapper.writeValueAsString(metricMap);
+        } catch (ConcurrentModificationException | NoSuchElementException | JsonProcessingException e) {
             // ignore - may happen when metrics are concurrently added or removed
             // report next time
             return null;
