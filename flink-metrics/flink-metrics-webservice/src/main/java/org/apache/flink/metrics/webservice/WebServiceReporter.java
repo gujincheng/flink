@@ -50,12 +50,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
-
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** {@link MetricReporter} that exports {@link Metric Metrics} via InfluxDB. */
 public class WebServiceReporter extends AbstractReporter implements Scheduled {
-    public static final MediaType mediaType
+    public static final MediaType MEDIATYPE
             = MediaType.get("application/json; charset=utf-8");
     private OkHttpClient client;
     private String url;
@@ -160,7 +159,7 @@ public class WebServiceReporter extends AbstractReporter implements Scheduled {
             return null;
         }
 
-        RequestBody body = RequestBody.create(mediaType, reportJson);
+        RequestBody body = RequestBody.create(MEDIATYPE, reportJson);
         Request request = new Request.Builder()
                 .url(url)
                 .post(body)
