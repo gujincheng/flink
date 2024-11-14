@@ -100,7 +100,7 @@ public class WebServiceReporter extends AbstractReporter implements Scheduled {
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
                 String responseString = response.body().string();
-                LOG.info("=======> {}" , responseString);
+                LOG.debug("=======> {}" , responseString);
             } else {
                 LOG.error("#####> report failed: {}", response.message());
             }
@@ -168,6 +168,7 @@ public class WebServiceReporter extends AbstractReporter implements Scheduled {
 
     @Override
     public String filterCharacters(String input) {
+        LOG.info("filterCharacters ======> {}" ,input);
         return input;
     }
 }
