@@ -26,10 +26,14 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.Route;
-import org.apache.commons.lang3.StringUtils;
+
+import org.apache.flink.metrics.Counter;
+import org.apache.flink.metrics.Gauge;
+import org.apache.flink.metrics.Histogram;
+import org.apache.flink.metrics.Meter;
 import org.apache.flink.metrics.Metric;
 import org.apache.flink.metrics.MetricConfig;
-import org.apache.flink.metrics.reporter.AbstractReporter;
+import org.apache.flink.metrics.MetricGroup;
 import org.apache.flink.metrics.reporter.MetricReporter;
 import org.apache.flink.metrics.reporter.Scheduled;
 
@@ -45,18 +49,29 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.ConcurrentModificationException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** {@link MetricReporter} that exports {@link Metric Metrics} via InfluxDB. */
-public class WebServiceReporter extends AbstractReporter implements Scheduled {
+public class WebServiceReporter implements MetricReporter, Scheduled {
     private static final Logger LOG = LoggerFactory.getLogger(WebServiceReporter.class);
     public static final MediaType MEDIATYPE = MediaType.get("application/json; charset=utf-8");
+    private final Map<Gauge<?>, String> gauges = new HashMap<>();
+    private final Map<Counter, String> counters = new HashMap<>();
+    private final Map<Histogram, String> histograms = new HashMap<>();
+    private final Map<Meter, String> meters = new HashMap<>();
+    HashSet<String> FILTERMETRICS = new HashSet<>();
+    static final String JOB_ID_VARIABLE = "<job_id>";
     private OkHttpClient client;
     private String url;
     private String jobName;
+    private String jobId;
     @Override
     public void open(MetricConfig config) {
         url = checkNotNull(WebServiceReporterOptions.getString(config,WebServiceReporterOptions.URL),
@@ -67,6 +82,10 @@ public class WebServiceReporter extends AbstractReporter implements Scheduled {
         String password = WebServiceReporterOptions.getString(config, WebServiceReporterOptions.PASSWORD);
         jobName = checkNotNull(WebServiceReporterOptions.getString(config,WebServiceReporterOptions.JOBNAME),
                 "Invalid configuration. URL: " + WebServiceReporterOptions.getString(config,WebServiceReporterOptions.JOBNAME));
+        String filterMetricStr = WebServiceReporterOptions.getString(config,WebServiceReporterOptions.FILTERMETRICS);
+        if(!isEmpty(filterMetricStr)){
+            FILTERMETRICS = new HashSet<>(Arrays.asList(WebServiceReporterOptions.getString(config,WebServiceReporterOptions.FILTERMETRICS).split(",")));
+        }
 
         client = new OkHttpClient.Builder()
                 .connectTimeout(connectTimeout, TimeUnit.MILLISECONDS)
@@ -77,7 +96,7 @@ public class WebServiceReporter extends AbstractReporter implements Scheduled {
                     public Request authenticate(
                             @Nullable Route route,
                             Response response) {
-                        if (StringUtils.isNotEmpty(userName) || StringUtils.isNotEmpty(password)) {
+                        if (!isEmpty(userName) && !isEmpty(password)) {
                             String credential = Credentials.basic(userName, password);
                             return response.request().newBuilder()
                                     .header("Authorization", credential)
@@ -95,17 +114,74 @@ public class WebServiceReporter extends AbstractReporter implements Scheduled {
     }
 
     @Override
+    public void notifyOfAddedMetric(Metric metric, String metricName, MetricGroup group) {
+        final String fullName = group.getMetricIdentifier(metricName);
+        Map<String, String> allVariables = group.getAllVariables();
+        this.jobId = allVariables.get(JOB_ID_VARIABLE);
+        if (FILTERMETRICS.isEmpty() || FILTERMETRICS.contains(metricName)) {
+            synchronized (this) {
+                switch (metric.getMetricType()) {
+                    case COUNTER:
+                        counters.putIfAbsent((Counter) metric, fullName);
+                        break;
+                    case GAUGE:
+                        gauges.putIfAbsent((Gauge<?>) metric, fullName);
+                        break;
+                    case HISTOGRAM:
+                        histograms.putIfAbsent((Histogram) metric, fullName);
+                        break;
+                    case METER:
+                        meters.putIfAbsent((Meter) metric, fullName);
+                        break;
+                    default:
+                        LOG.warn(
+                                "Cannot add metric of type {}. This indicates that the reporter "
+                                        + "does not support this metric type.",
+                                metric.getClass().getName());
+                }
+            }
+        }
+    }
+
+    @Override
+    public void notifyOfRemovedMetric(Metric metric, String metricName, MetricGroup group) {
+        synchronized (this) {
+            switch (metric.getMetricType()) {
+                case COUNTER:
+                    counters.remove(metric);
+                    break;
+                case GAUGE:
+                    gauges.remove(metric);
+                    break;
+                case HISTOGRAM:
+                    histograms.remove(metric);
+                    break;
+                case METER:
+                    meters.remove(metric);
+                    break;
+                default:
+                    LOG.warn(
+                            "Cannot remove unknown metric type {}. This indicates that the reporter "
+                                    + "does not support this metric type.",
+                            metric.getClass().getName());
+            }
+        }
+    }
+
+    @Override
     public void report() {
         Request request = buildReport();
-        try (Response response = client.newCall(request).execute()) {
-            if (response.isSuccessful()) {
-                String responseString = response.body().string();
-                LOG.debug("=======> {}" , responseString);
-            } else {
-                LOG.error("#####> report failed: {}", response.message());
+        if (request != null) {
+            try (Response response = client.newCall(request).execute()) {
+                if (response.isSuccessful()) {
+                    String responseString = response.body().string();
+                    LOG.debug("=======> {}" , responseString);
+                } else {
+                    LOG.error("#####> report failed: {}", response.message());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -117,6 +193,7 @@ public class WebServiceReporter extends AbstractReporter implements Scheduled {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode metricMap = mapper.createObjectNode();
         metricMap.put("jobName", this.jobName);
+        metricMap.put("jobId", this.jobId);
         metricMap.put("timestamp", timestamp);
         ArrayNode jsonArray = mapper.createArrayNode();
         try {
@@ -159,16 +236,17 @@ public class WebServiceReporter extends AbstractReporter implements Scheduled {
         }
 
         RequestBody body = RequestBody.create(MEDIATYPE, reportJson);
-        Request request = new Request.Builder()
-                .url(url)
-                .post(body)
-                .build();
-        return request;
+        if (!metricMap.get("metrics").isEmpty()){
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(body)
+                    .build();
+            return request;
+        }
+        return null;
     }
 
-    @Override
-    public String filterCharacters(String input) {
-        LOG.info("filterCharacters ======> {}" ,input);
-        return input;
+    private static boolean isEmpty(String str){
+        return str == null || str.isEmpty();
     }
 }

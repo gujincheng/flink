@@ -48,8 +48,16 @@ public class WebServiceReporterOptions {
                     .stringType()
                     .noDefaultValue()
                     .withDescription("(optional) WebService username's password used for authentication");
+
     public static final ConfigOption<String> JOBNAME =
             ConfigOptions.key("jobName")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription(
+                            "(optional) WebService Flink JobName");
+
+    public static final ConfigOption<String> FILTERMETRICS =
+            ConfigOptions.key("filterMetrics")
                     .stringType()
                     .noDefaultValue()
                     .withDescription(
