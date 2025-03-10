@@ -22,10 +22,7 @@ import org.apache.flink.annotation.docs.Documentation;
 import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
-import org.apache.flink.configuration.ConfigurationUtils;
-import org.apache.flink.configuration.IllegalConfigurationException;
 import org.apache.flink.metrics.MetricConfig;
-
 
 /** Config options for {@link WebServiceReporter}. */
 @Documentation.SuffixOption(ConfigConstants.METRICS_REPORTER_PREFIX + "webservice")
@@ -47,21 +44,38 @@ public class WebServiceReporterOptions {
             ConfigOptions.key("password")
                     .stringType()
                     .noDefaultValue()
-                    .withDescription("(optional) WebService username's password used for authentication");
+                    .withDescription(
+                            "(optional) WebService username's password used for authentication");
 
     public static final ConfigOption<String> JOBNAME =
             ConfigOptions.key("jobName")
                     .stringType()
                     .noDefaultValue()
-                    .withDescription(
-                            "(optional) WebService Flink JobName");
+                    .withDescription("(optional) WebService Flink JobName");
+
+    public static final ConfigOption<String> TASKINSTANCEID =
+            ConfigOptions.key("taskInstanceId")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription("(optional) WebService taskInstanceId");
+
+    public static final ConfigOption<String> DMPTASKINSTANCEID =
+            ConfigOptions.key("dmpTaskInstanceId")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription("(optional) WebService dmpTaskInstanceId");
 
     public static final ConfigOption<String> FILTERMETRICS =
             ConfigOptions.key("filterMetrics")
                     .stringType()
                     .noDefaultValue()
-                    .withDescription(
-                            "(optional) WebService Flink JobName");
+                    .withDescription("(optional) WebService Metrics Index List");
+
+    public static final ConfigOption<String> TOKEN =
+            ConfigOptions.key("token")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription("(optional) WebService token");
 
     public static final ConfigOption<Integer> CONNECT_TIMEOUT =
             ConfigOptions.key("connectTimeout")
